@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Upload</title>
+</head>
+<body>
+  <h1>File Upload</h1>
+  
+  <!-- Upload Form -->
+  <form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" id="fileInput" name="file">
+    <button type="submit">Upload</button>
+  </form>
+  
+  <h2>Files</h2>
+  <ul id="fileList"></ul>
+  
+  <script>
+    const uploadForm = document.getElementById('uploadForm');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+
+    // Handle file upload
+    uploadForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+
+      fetch('/files/upload', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        loadFiles();
+      })
+      .catch(error => console.error('Error:', error));
+    });
+
+    // Load files
+    function loadFiles() {
+      fetch('/files')
+        .then(response => response.json())
+        .then(files => {
+          fileList.innerHTML = '';
+          files.forEach(file => {
+            const li = document.createElement('li');
+            li.textContent = file;
+            
+            // Delete button
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.addEventListener('click', () => {
+              fetch(`/files/${file}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                  console.log(data);
+                  loadFiles();
+                });
+            });
+
+            li.appendChild(deleteButton);
+            fileList.appendChild(li);
+          });
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Initial load
+    loadFiles();
+  </script>
+</body>
+</html>
